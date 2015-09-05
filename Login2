@@ -1,0 +1,458 @@
+package com.seconsquare;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+
+import com.facebook.AccessToken;
+import com.facebook.AccessTokenTracker;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.FacebookSdk;
+import com.facebook.Profile;
+import com.facebook.ProfileTracker;
+import com.facebook.login.LoginResult;
+import com.facebook.login.widget.LoginButton;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import adapter.Actionbar;
+import adapter.ConfigFont;
+import adapter.DialogCustomUI;
+import adapter.MyDB;
+
+    public class LoginActivity extends FragmentActivity {
+
+    private TextView mTextDetails;
+    private CallbackManager mCallbackManager;
+    private AccessTokenTracker mTokenTracker;
+    private ProfileTracker mProfileTracker;
+
+
+
+
+
+    LoginButton mButtonLogin ;
+
+
+
+
+    ConfigFont configFont;
+    EditText editText_email, editText_password;
+    Button btn_login ;
+    private LoginButton FacebookLogin;
+    private  LoginButton btn_loginWithFacebook1111 ;
+    TextView text_forgetPassword, text_register, text_desc;
+
+    boolean chk_email = false;
+    public static CallbackManager callbackmanager;
+    Activity context;
+
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        Log.e("ACTIVITY", "Login");
+     
+        FacebookSdk.sdkInitialize(getApplicationContext());
+        setContentView(R.layout.activity_login);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        context = this ;
+        mCallbackManager = CallbackManager.Factory.create();
+         FacebookLogin = (LoginButton) findViewById(R.id.btn_loginWithFacebook);
+FacebookLogin.registerCallback(mCallbackManager, new FacebookCallback<LoginResult>() {
+    @Override
+    public void onSuccess(LoginResult loginResult) {
+        Log.e("data 1", "data 1");
+    }
+
+    @Override
+    public void onCancel() {
+
+        Log.e("data 2", "data 2");
+    }
+
+    @Override
+    public void onError(FacebookException e) {
+        Log.e("data 3", "data 3");
+    }
+});
+
+      
+
+
+
+
+
+
+
+
+        configFont = new ConfigFont(LoginActivity.this);
+        new Actionbar(LoginActivity.this, "เข้าสู่ระบบ");
+        initial();
+
+        text_forgetPassword.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(LoginActivity.this, ForgetPasswordActivity.class));
+            }
+        });
+
+        text_register.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(LoginActivity.this, AgreementActivity.class));
+            }
+        });
+
+      //\    dummyUSER();
+
+
+
+        mCallbackManager = CallbackManager.Factory.create();
+        setupTokenTracker();
+        setupProfileTracker();
+
+        mTokenTracker.startTracking();
+        mProfileTracker.startTracking();
+
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        ifExistLogin();
+
+
+
+        //  dummyUSER();
+
+
+        Profile profile = Profile.getCurrentProfile();
+
+
+
+        //   mTextDetails.setText(constructWelcomeMessage(profile));
+
+
+
+    }
+
+    public void initial() {
+        text_desc = (TextView) findViewById(R.id.text_desc);
+        editText_email = (EditText) findViewById(R.id.editText_email);
+        editText_password = (EditText) findViewById(R.id.editText_password);
+        btn_login = (Button) findViewById(R.id.btn_login);
+        btn_loginWithFacebook1111 = (LoginButton) findViewById(R.id.btn_loginWithFacebook);
+
+
+
+
+
+
+
+
+        text_forgetPassword = (TextView) findViewById(R.id.text_forgetPassword);
+        text_register = (TextView) findViewById(R.id.text_register);
+
+        TextView   mTextDetails = (TextView) findViewById(R.id.text_details);
+
+        LoginButton mButtonLogin = (LoginButton) findViewById(R.id.login_button);
+
+        configFont.onSetFontFace(text_desc, 0);
+        configFont.onSetFontFace(editText_email, 0);
+        configFont.onSetFontFace(editText_password, 0);
+        configFont.onSetFontFace(btn_login, 0);
+        configFont.onSetFontFace(btn_loginWithFacebook1111, 0);
+        configFont.onSetFontFace(text_forgetPassword, 2);
+        configFont.onSetFontFace(text_register, 2);
+    }
+
+    public void ifExistLogin() {
+
+        MyDB myDB = new MyDB(this);
+        if (myDB.SelectAllData().size() > 0) {
+            HashMap<String, String> data = myDB.SelectAllData().get(0);
+            Log.e("USER", "user_id -> " + data.get("user_id") + " email -> " + data.get("email") + " password -> " + data.get("password"));
+
+            finish();
+        } else {
+            Log.e("USER", "no user in SQLite");
+
+        }
+
+    }
+
+    public void dummyUSER() {
+        final String text_space = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+
+        btn_login.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!chk_email) {
+                    new DialogCustomUI(LoginActivity.this, "ไม่สามารถดำเนินการได้", "อีเมลของท่าไม่ถูกต้อง" + text_space, "", "ตกลง");
+                } else if (editText_email.getText().toString().matches("") || editText_password.getText().toString().matches("")) {
+                    new DialogCustomUI(LoginActivity.this, "ไม่สามารถดำเนินการได้", "กรุณาใส่อีเมล และ รหัสผ่านของท่านด้วย" + text_space, "", "ตกลง");
+                } else if (editText_password.getText().toString().length() < 6) {
+                    new DialogCustomUI(LoginActivity.this, "ไม่สามารถดำเนินการได้", "รหัสผ่านต้องมากกว่า หรือเท่ากับ 6 ตัวอักษร" + text_space, "", "ตกลง");
+                } else {
+                    // dummy Register
+                    Register();
+                }
+            }
+        });
+
+        btn_loginWithFacebook1111.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                Log.e("Login แล้ว","Login แล้ว");
+
+                Login();
+                // LoginButton  FacebookLoginButton = (LoginButton)   findViewById(R.id.btn_loginWithFacebook);
+
+
+
+                //   Log.e("PondBug  %S ,%s ,%s,%s ", (Arrays.asList("public_profile, email, user_birthday, user_friends").toString()));
+
+
+                //  new DialogCustomUI(LoginActivity.this, "ขออภัย", "ระบบนี้ยังไม่เปิดให้ใช้บริการ" + text_space, "", "ตกลง");
+            }
+        });
+
+        editText_email.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                int index_at = s.toString().indexOf("@");
+                int index_dot = s.toString().indexOf(".");
+                if (index_at >= 0 && index_dot >= 0 && s.length() >= 8) {
+//                    editText_email.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_correct, 0);
+                    chk_email = true;
+                } else {
+//                    editText_email.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_star, 0);
+                    chk_email = false;
+                }
+            }
+        });
+    }
+
+
+
+
+
+
+
+    public void Register() {
+
+        final MyDB myDb = new MyDB(this);
+        ArrayList<HashMap<String, String>> alist = new ArrayList<>();
+
+        HashMap<String, String> jsonMap = new HashMap<String, String>();
+        jsonMap.put("facebook_id", "");
+        jsonMap.put("email", editText_email.getText().toString());
+        jsonMap.put("password", editText_password.getText().toString());
+        jsonMap.put("name", "ใบไม้");
+        jsonMap.put("surname", "ใบหญ้า");
+        jsonMap.put("phone", "0802226666");
+        jsonMap.put("license_plate1", "กข8975กรุงเทพมหานคร");
+        jsonMap.put("license_plate2", "");
+        alist.add(jsonMap);
+        if (SaveData(alist)) {
+            Log.e("REGISTER", "successful");
+            HashMap<String, String> data = myDb.SelectAllData().get(0);
+            Log.e("USER", "user_id -> " + data.get("user_id") +
+                    " email -> " + data.get("email") +
+                    " password -> " + data.get("password"));
+
+            finish();
+        }
+    }
+
+
+
+
+    public  void Login(){
+   Log.e("Login  2", "Login แล้ว 2 ");
+
+
+        callbackmanager = CallbackManager.Factory.create();
+
+
+
+
+    }
+
+    public boolean SaveData(ArrayList<HashMap<String, String>> a) {
+
+        final HashMap<String, String> map = a.get(0);
+        final MyDB myDb = new MyDB(this);
+
+        long saveStatus = myDb.InsertData(
+                map.get("facebook_id"),
+                map.get("email"),
+                map.get("password"),
+                map.get("name"),
+                map.get("surname"),
+                map.get("phone"),
+                map.get("license_plate1"),
+                map.get("license_plate2"));
+        if (saveStatus <= 0) {
+            Log.e("REGISTER", "failed");
+            return false;
+        }
+
+        return true;
+    }
+
+
+
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.activity_login, container, false);
+    }
+
+
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        setupTextDetails(view);
+        setupLoginButton(view);
+    }
+
+
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        mTokenTracker.stopTracking();
+        mProfileTracker.stopTracking();
+    }
+
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        mCallbackManager.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void setupTextDetails(View view) {
+        mTextDetails = (TextView) view.findViewById(R.id.text_details);
+    }
+
+    private void setupTokenTracker() {
+        mTokenTracker = new AccessTokenTracker() {
+            @Override
+            protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken, AccessToken currentAccessToken) {
+                Log.d("VIVZ", "" + currentAccessToken);
+            }
+        };
+    }
+
+    private void setupProfileTracker() {
+        mProfileTracker = new ProfileTracker() {
+            @Override
+            protected void onCurrentProfileChanged(Profile oldProfile, Profile currentProfile) {
+                Log.d("VIVZ", "" + currentProfile);
+                //  mTextDetails.setText(constructWelcomeMessage(currentProfile));
+            }
+        };
+    }
+
+
+
+
+    private void setupLoginButton(View view) {
+
+
+        Log.e("PondBug", "PondBug");
+        //  LoginButton mButtonLogin = (LoginButton) view.findViewById(R.id.login_button);
+
+
+
+
+
+
+
+
+
+
+
+
+        // mButtonLogin.setFragment(this);
+//        if (Build.VERSION.SDK_INT >= 16)
+//            mButtonLogin.setBackground(null);
+//        else
+//            mButtonLogin.setBackgroundDrawable(null);
+        mButtonLogin.setCompoundDrawables(null, null, null, null);
+        mButtonLogin.setReadPermissions("user_friends");
+
+
+//
+//        mButtonLogin.setReadPermissions("user_friends");
+//        mButtonLogin.setReadPermissions("public_profile");
+//        mButtonLogin.setReadPermissions("email");
+//        mButtonLogin.setReadPermissions("user_birthday");
+//
+//
+//
+//        mButtonLogin.setReadPermissions(Arrays.asList("public_profile, email, user_birthday, user_friends"));
+
+        // Callback registration
+
+
+    }
+
+    private String constructWelcomeMessage(Profile profile) {
+        StringBuffer stringBuffer = new StringBuffer();
+        if (profile != null) {
+            stringBuffer.append("Welcome " + profile.getName());
+        }
+        return stringBuffer.toString();
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+}
